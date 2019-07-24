@@ -41,24 +41,25 @@ def generate_and_send_digests(users, from_dt, to_dt):
     users_by_id = dict((str(u['id']), u) for u in users)
     msgs = []
     try:
-		for user_id, digest in generate_digest_content(users_by_id, from_dt, to_dt):
-			user = users_by_id[user_id]
-			# format the digest
-			text, html = render_digest(
-				user, digest, settings.FORUM_DIGEST_EMAIL_TITLE, settings.FORUM_DIGEST_EMAIL_DESCRIPTION)
-			# send the message through our mailer
-			msg = EmailMultiAlternatives(
-				settings.FORUM_DIGEST_EMAIL_SUBJECT,
-				text,
-				settings.FORUM_DIGEST_EMAIL_SENDER,
-				[user['email']]
-			)
-			msg.attach_alternative(html, "text/html")
-			msgs.append(msg)
-		if msgs:
-			msgs.send()
-		if settings.DEAD_MANS_SNITCH_URL:
-			requests.post(settings.DEAD_MANS_SNITCH_URL)
+        with closing(get_connection()) as cx:
+            for user_id, digest in generate_digest_content(users_by_id, from_dt, to_dt):
+                user = users_by_id[user_id]
+                # format the digest
+                text, html = render_digest(
+                    user, digest, settings.FORUM_DIGEST_EMAIL_TITLE, settings.FORUM_DIGEST_EMAIL_DESCRIPTION)
+                # send the message through our mailer
+                msg = EmailMultiAlternatives(
+                    settings.FORUM_DIGEST_EMAIL_SUBJECT,
+                    text,
+                    settings.FORUM_DIGEST_EMAIL_SENDER,
+                    [user['email']]
+                )
+                msg.attach_alternative(html, "text/html")
+                msgs.append(msg)
+            if msgs:
+                cx.send_messages(msgs)
+            if settings.DEAD_MANS_SNITCH_URL:
+                requests.post(settings.DEAD_MANS_SNITCH_URL)
     except (CommentsServiceException, SESMaxSendingRateExceededError) as e:
         # only retry if no messages were successfully sent yet.
         if not any((getattr(msg, 'extra_headers', {}).get('status') == 200 for msg in msgs)):
