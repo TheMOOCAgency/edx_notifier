@@ -1,0 +1,31 @@
+{% load i18n %}
+{% autoescape off %}
+
+* {{ title }} *
+{{ description }}
+---
+
+{% blocktrans with name=user.name %}Hi {{name}},{% endblocktrans %}
+
+{% blocktrans count thread_count=thread_count %}You have {{thread_count}} discussion thread with updates in {{course_names}}. The most recent highlights are shown below. As a reminder, you can turn off all discussion digests from any course's Discussion Home page.{% plural %}You have {{thread_count}} discussion threads with updates in {{course_names}}. The most recent highlights are shown below. As a reminder, you can turn off all discussion digests from any course's Discussion Home page.{% endblocktrans %}
+ 
+{% for course in digest.courses %}
+
+[{{ course.title }}]
+
+{% for thread in course.threads %}
+{{ thread.title }}
+---
+{% for item in thread.items %}
+{% blocktrans with author=item.author datetime=item.dt %}{{ author }}: on {{ datetime }} UTC{% endblocktrans %}
+
+{{ item.body }}
+
+{% endfor %}
+{% endfor %}
+{% endfor %}
+
+{% blocktrans %}If you would like to stop receiving these updates, you can turn off all Course Discussion digests from any course's Discussion Home page. You can also quickly turn off these notifications by going to {{unsubscribe_url}}.{% endblocktrans %}
+
+{{postal_address}}
+{% endautoescape %}
