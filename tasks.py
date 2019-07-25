@@ -1,10 +1,6 @@
 """
 Celery tasks for generating and sending digest emails.
 """
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
- 
-
 from contextlib import closing
 from datetime import datetime, timedelta
 import logging
@@ -12,9 +8,6 @@ import requests
 
 from boto.ses.exceptions import SESMaxSendingRateExceededError
 import celery
-
-
-
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 
@@ -134,4 +127,4 @@ def do_forums_digests():
         for user_batch in batch_digest_subscribers():
             generate_and_send_digests.delay(user_batch, from_dt, to_dt)
     except UserServiceException, e:
-        raise do_forums_digests.retry(exc=e) 
+        raise do_forums_digests.retry(exc=e)
