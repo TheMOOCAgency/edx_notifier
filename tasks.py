@@ -1,6 +1,11 @@
 """
 Celery tasks for generating and sending digest emails.
 """
+import settings
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE','notifier.settings')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'notifier.settings'
+
 from contextlib import closing
 from datetime import datetime, timedelta
 import logging
@@ -8,8 +13,10 @@ import requests
 
 from boto.ses.exceptions import SESMaxSendingRateExceededError
 import celery
-from django.conf import settings
+
 from django.core.mail import EmailMultiAlternatives
+
+
 
 from notifier.connection_wrapper import get_connection
 from notifier.digest import render_digest
@@ -31,6 +38,8 @@ def generate_and_send_digests(users, from_dt, to_dt):
     `from_dt` and `to_dt` are datetime objects representing the start and end
     of the time window for which to generate a digest.
     """
+    logger.info("DIGEST TASK UPLOAD")
+    logger.info(generate_digest_content(users_by_id, from_dt, to_dt))
     users_by_id = dict((str(u['id']), u) for u in users)
     msgs = []
     try:
@@ -49,6 +58,7 @@ def generate_and_send_digests(users, from_dt, to_dt):
                 )
                 msg.attach_alternative(html, "text/html")
                 msgs.append(msg)
+                logger.info("MSGS DIGEST TASK UPLOAD")
             if msgs:
                 cx.send_messages(msgs)
             if settings.DEAD_MANS_SNITCH_URL:
@@ -56,12 +66,26 @@ def generate_and_send_digests(users, from_dt, to_dt):
     except (CommentsServiceException, SESMaxSendingRateExceededError) as e:
         # only retry if no messages were successfully sent yet.
         if not any((getattr(msg, 'extra_headers', {}).get('status') == 200 for msg in msgs)):
+            
             raise generate_and_send_digests.retry(exc=e)
         else:
             # raise right away, since we don't support partial retry
             raise
 
-
+def tryTestUser():
+	with closing(get_connection()) as cx:
+		msg = EmailMultiAlternatives(
+						settings.FORUM_DIGEST_EMAIL_SUBJECT,
+						"test Edx Sender",
+						settings.FORUM_DIGEST_EMAIL_SENDER,
+						["daivis@hubbel.onmicrosoft.com"]
+					)
+		html="<p>TEST</p>"
+		msgs = []
+		msg.attach_alternative(html, "text/html")
+		msgs.append(msg)
+		cx.send_messages(msgs)
+				
 def _time_slice(minutes, now=None):
     """
     Returns the most recently-elapsed time slice of the specified length (in

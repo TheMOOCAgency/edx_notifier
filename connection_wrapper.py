@@ -1,12 +1,14 @@
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings") 
 
-
+import settings
 import logging
 import time
 
-from django.conf import settings
+# from django.conf import settings
 from django.core.mail import get_connection as dj_get_connection
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings") 
 
 logger = logging.getLogger(__name__)
 

@@ -28,6 +28,8 @@ def _http_post(*a, **kw):
     try:
         logger.debug('POST %s %s', a[0], kw)
         response = requests.post(*a, **kw)
+        data = str(response)
+        logger.debug("__________________________data2__________________________")
     except requests.exceptions.ConnectionError as e:
         _, msg, tb = sys.exc_info()
         six.reraise(CommentsServiceException, "comments service request failed: {}".format(msg), tb)
@@ -50,7 +52,6 @@ def _build_digest(user_content, user_info):
     """
     Transforms course/thread/item data from the comments service's response
     into a Digest for a single user.
-
     Results will only include threads/items from courses in which the user has
     been reported to be actively enrolled (by the user service).
     """
@@ -82,7 +83,6 @@ def _build_digest_course(course_id, course_content, user_course_info):
     """
     Transforms thread/item data from the comments service's response for a
     specific user and course.
-
     The threads returned will be filtered by a group-level access check.
     """
     if _should_skip_org(course_id):
@@ -134,16 +134,13 @@ def generate_digest_content(users_by_id, from_dt, to_dt):
     Function that calls the edX comments service API and yields a
     tuple of (user_id, digest) for each specified user that has >0
     discussion updates between the specified points in time.
-
     `users_by_id` should be a dict of {user_id: user} where user-id is an edX
     user id and user is the user dict returned by edx notifier_api.
     `from_dt` and `to_dt` should be datetime.datetime objects representing
     the desired time window.
-
     In each yielded tuple, the `user_id` part will contain one of the values
     passed in `user_ids` and the `digest` part will contain a Digest object
     (see notifier.digest.Digest for structure details).
-
     The order in which user-digest results will be yielded is undefined, and
     if no updates are found for any user_id in the given time period, no
     user-digest tuple will be yielded for them (therefore, depending on the
@@ -163,6 +160,12 @@ def generate_digest_content(users_by_id, from_dt, to_dt):
     }
 
     logger.info('calling comments service to pull digests for %d user(s)', len(users_by_id))
+    logger.info('idCalleds',users_by_id)
+    logger.info(users_by_id)
     resp = _http_post(api_url, headers=headers, data=data)
+    logger.info(resp.json())
+   
+    # logger.debug(resp.content())
+    # logger.debug(resp.text())
 
     return process_cs_response(resp.json(), users_by_id)

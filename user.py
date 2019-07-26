@@ -1,13 +1,16 @@
-"""
-Functions in support of generating formatted digest emails of forums activity.
-"""
+import os
+
+
+
 import logging
 import sys
 
-from django.conf import settings
+import settings
 import requests
 import six
 
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings") 
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +35,7 @@ def _http_get(*a, **kw):
     try:
         logger.debug('GET {} {}'.format(a[0], kw))
         response = requests.get(*a, **kw)
+        logger.debug(response.json())
     except requests.exceptions.ConnectionError as e:
         _, msg, tb = sys.exc_info()
         six.reraise(UserServiceException, "request failed: {}".format(msg), tb)

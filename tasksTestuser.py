@@ -16,5 +16,5 @@ from .utils import make_user_info
 
 logger = logging.getLogger(__name__)
 
-generate_and_send_digests('166440','2019-07-23','2019-07-24')
+generate_and_send_digests('176687','2019-07-23','2019-07-24')
 
