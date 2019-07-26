@@ -39,7 +39,6 @@ def generate_and_send_digests(users, from_dt, to_dt):
     of the time window for which to generate a digest.
     """
     logger.info("DIGEST TASK UPLOAD")
-    # logger.info(users, from_dt, to_dt)
     users_by_id = dict((str(u['id']), u) for u in users)
     msgs = []
     try:
@@ -58,7 +57,6 @@ def generate_and_send_digests(users, from_dt, to_dt):
                 )
                 msg.attach_alternative(html, "text/html")
                 msgs.append(msg)
-                logger.info("MSGS DIGEST TASK UPLOAD")
             if msgs:
                 cx.send_messages(msgs)
             if settings.DEAD_MANS_SNITCH_URL:
