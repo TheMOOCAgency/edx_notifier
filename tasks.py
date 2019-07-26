@@ -39,7 +39,7 @@ def generate_and_send_digests(users, from_dt, to_dt):
     of the time window for which to generate a digest.
     """
     logger.info("DIGEST TASK UPLOAD")
-    logger.info(generate_digest_content(users_by_id, from_dt, to_dt))
+    # logger.info(users, from_dt, to_dt)
     users_by_id = dict((str(u['id']), u) for u in users)
     msgs = []
     try:
