@@ -39,12 +39,10 @@ def _http_post(*a, **kw):
 
 
 def process_cs_response(payload, user_info_by_id):
-    """
-    Transforms and filters the comments service response to generate Digest
-    objects for each user supplied in user_info_by_id.
-    """
+    ("--------------------PROCESSS--------------------")
     for user_id, user_content in payload.iteritems():
         digest = _build_digest(user_content, user_info_by_id[user_id])
+        logger.info("--------------------PROCESSS--------------------")
         if not digest.empty:
             yield user_id, digest
 
@@ -160,12 +158,14 @@ def generate_digest_content(users_by_id, from_dt, to_dt):
     }
 
     logger.info('calling comments service to pull digests for %d user(s)', len(users_by_id))
-    logger.info('idCalleds',users_by_id)
+    logger.info("")
+    logger.info("userIDDDDDDDDDDD")
     logger.info(users_by_id)
+    logger.info("userIDDDDDDDDDDD")
     resp = _http_post(api_url, headers=headers, data=data)
+    logger.info("****************")
     logger.info(resp.json())
+    logger.info("****************")
    
-    # logger.debug(resp.content())
-    # logger.debug(resp.text())
 
     return process_cs_response(resp.json(), users_by_id)

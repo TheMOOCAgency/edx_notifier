@@ -2,9 +2,9 @@
 Celery tasks for generating and sending digest emails.
 """
 import settings
-import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE','notifier.settings')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'notifier.settings'
+# import os
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE','notifier.settings')
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'notifier.settings'
 
 from contextlib import closing
 from datetime import datetime, timedelta

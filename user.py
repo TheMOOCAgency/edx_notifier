@@ -1,16 +1,13 @@
-import os
-
-
-
+"""
+Functions in support of generating formatted digest emails of forums activity.
+"""
 import logging
 import sys
 
-import settings
+from dogapi import dog_stats_api
+from django.conf import settings
 import requests
-import six
 
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings") 
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +32,14 @@ def _http_get(*a, **kw):
     try:
         logger.debug('GET {} {}'.format(a[0], kw))
         response = requests.get(*a, **kw)
-        logger.debug(response.json())
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError, e:
         _, msg, tb = sys.exc_info()
-        six.reraise(UserServiceException, "request failed: {}".format(msg), tb)
+        raise UserServiceException, "request failed: {}".format(msg), tb
     if response.status_code != 200:
-        raise UserServiceException("HTTP Error {}: {}".format(
+        raise UserServiceException, "HTTP Error {}: {}".format(
             response.status_code,
             response.reason
-        ))
+        )
     return response
 
 def get_digest_subscribers():
@@ -61,7 +57,8 @@ def get_digest_subscribers():
 
     logger.info('calling user api for digest subscribers')
     while True:
-        data = _http_get(api_url, params=params, headers=_headers(), **_auth()).json()
+        with dog_stats_api.timer('notifier.get_digest_subscribers.time'):
+            data = _http_get(api_url, params=params, headers=_headers(), **_auth()).json()
         for result in data['results']:
             yield result
         if data['next'] is None:
@@ -72,14 +69,15 @@ def get_digest_subscribers():
 def get_user(user_id):
     api_url = '{}/notifier_api/v1/users/{}/'.format(settings.US_URL_BASE, user_id)
     logger.info('calling user api for user %s', user_id)
-    r = _http_get(api_url, headers=_headers(), **_auth())
-    if r.status_code == 200:
-        user = r.json()
-        return user
-    elif r.status_code == 404:
-        return None
-    else:
-        r.raise_for_status()
-        raise Exception(
-            'unhandled response from user service: %s %s' %
-            (r.status_code, r.reason))
+    with dog_stats_api.timer('notifier.get_user.time'):
+        r = _http_get(api_url, headers=_headers(), **_auth())
+        if r.status_code == 200:
+            user = r.json()
+            return user
+        elif r.status_code == 404:
+            return None
+        else:
+            r.raise_for_status()
+            raise Exception(
+                'unhandled response from user service: %s %s' %
+                (r.status_code, r.reason))

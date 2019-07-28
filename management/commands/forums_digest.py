@@ -42,7 +42,7 @@ class Command(BaseCommand):
                     action='store',
                     dest='to_datetime',
                     default=None,
-                    help='datetime as of which to generate digest content, in ISO-8601 format (UTC).  Defaults to today at 00:00 (UTC).'),
+                    help='datetime as of which to generate digest content, in ISO-8601 format (UTC).  Defaults to today at midnight (UTC).'),
         make_option('--minutes',
                     action='store',
                     dest='minutes',
@@ -103,7 +103,7 @@ class Command(BaseCommand):
             logger.warning('could not show rendered %s: %s', fmt, msg)
 
         try:
-            user_id, digest = next(generate_digest_content(users_by_id, from_dt, to_dt))
+            user_id, digest = generate_digest_content(users_by_id, from_dt, to_dt).next()
         except StopIteration:
             _fail('no digests found')
             return
@@ -163,9 +163,7 @@ class Command(BaseCommand):
             generate_and_send_digests.delay(
                 some_users,
                 from_datetime,
-                to_datetime,
-                language=settings.LANGUAGE_CODE
-            )
+                to_datetime)
 
         user_batch = []
         for user in users:

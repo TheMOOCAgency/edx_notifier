@@ -1,14 +1,9 @@
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings") 
-
-import settings
 import logging
 import time
 
-# from django.conf import settings
+from django.conf import settings
 from django.core.mail import get_connection as dj_get_connection
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings") 
+from dogapi import dog_stats_api
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +31,9 @@ class BackendWrapper(object):
         elapsed = time.time() - t
         if msg_count > 0:
             logger.info('sent %s messages, elapsed: %.3fs' % (msg_count, elapsed))
+            # report an average timing to datadog
+            dog_stats_api.histogram('notifier.send.time', elapsed / msg_count)
+            dog_stats_api.increment('notifier.send.count', msg_count)
             for msg in email_messages:
                 hdrs = dict((k, v) for k, v in dict(msg.message()).iteritems()
                             if k.lower() not in ('date', 'from', 'subject', 'content-type', 'mime-version'))
@@ -49,7 +47,7 @@ class BackendWrapper(object):
         # never raise Exceptions on close().
         try:
             self._backend.close()
-        except Exception as e:
+        except Exception, e:
             logger.debug("self._backend.close() failed: %s", e)
 
     def __getattr__(self, a):
